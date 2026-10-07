@@ -3,6 +3,7 @@ title: "Hierarchical Bayesian Evaluation of Landsat 8 and Sentinel-2 Derived Bur
 author: "Lavran Pagano"
 format:
   html:
+    embed-resources: true
     toc: true
     toc-depth: 2
     code-tools: true
@@ -13,7 +14,7 @@ jupyter: python3
 
 ## Abstract
 
-Understanding postfire burn severity is essential for predicting ecosystem recovery, erosion, habitat change, and management needs. The Composite Burn Index (CBI) provides a field measure of ecological change, but field observations are too sparse to characterize most burned landscapes without satellite data. This study evaluated four satellite burn severity indices, dNBR, RBR, RdNBR, and RdNDVI, against CBI measurements from five fires in the United States. Landsat 8 Collection 2 surface reflectance imagery was processed for all five fires, and a direct comparison with Sentinel-2 imagery was conducted for Legion Lake, the only fire with suitable imagery from both sensors. RBR produced the strongest pooled relationship with CBI in this dataset, although index performance varied among fires. Landsat 8 and Sentinel-2 produced similar validation metrics at Legion Lake, while their mapped severity patterns differed at native output resolutions. The relationship between RBR and CBI was then evaluated with pooled, hierarchical, and hierarchical heteroscedastic Bayesian models. Plot-level cross validation favored the hierarchical model, indicating that accounting for differences among fires improved prediction within the represented fires. The heteroscedastic model did not materially improve mean prediction, but posterior predictive checks showed that it represented the increase in residual variation at higher CBI values more accurately. These results show that variation among fires and across the severity gradient is an important component of satellite burn severity calibration and should be represented directly rather than summarized by a single pooled fit statistic.
+Understanding post-fire burn severity is essential for predicting ecosystem recovery, erosion, habitat change, and management needs. The Composite Burn Index (CBI) provides a field measure of ecological change, but field observations are too sparse to characterize most burned landscapes without satellite data. This study evaluated four satellite burn severity indices, dNBR, RBR, RdNBR, and RdNDVI, against CBI measurements from five fires in the United States. Landsat 8 Collection 2 surface reflectance imagery was processed for all five fires, and a direct comparison with Sentinel-2 imagery was conducted for Legion Lake, the only fire with suitable imagery from both sensors. RBR produced the strongest pooled relationship with CBI in this dataset, although index performance varied among fires. Landsat 8 and Sentinel-2 produced similar validation metrics at Legion Lake, while their mapped severity patterns differed at native output resolutions. The relationship between RBR and CBI was then evaluated with pooled, hierarchical, and hierarchical heteroscedastic Bayesian models. Plot-level cross-validation ranked both hierarchical models above the pooled model, suggesting that accounting for differences among fires improved prediction within the represented fires. The heteroscedastic model did not materially improve mean prediction, but posterior predictive checks showed that it represented the increase in residual variation at higher CBI values more accurately. These results show that variation among fires and across the severity gradient is an important component of satellite burn severity calibration and should be represented directly rather than summarized by a single pooled fit statistic.
 
 ## Introduction
 
@@ -25,7 +26,7 @@ Howe et al. (2022) compared Sentinel-2 and Landsat 8 using 912 forested CBI plot
 
 Most comparisons of burn-severity indices summarize model performance using measures such as the coefficient of determination and root-mean-square error. These statistics describe average performance but do not fully represent uncertainty in the CBI value predicted for an individual pixel. Similar spectral-index values can correspond to substantially different ecological effects because of variation among fires, vegetation communities, field plots, and satellite pixels. Harvey et al. (2019) used Bayesian hierarchical models to estimate relationships between satellite indices and individual field measures of fire effects, producing posterior distributions that represented uncertainty in pixel-level predictions. Furniss et al. (2020) similarly found wide ranges of observed tree mortality at equivalent Landsat index values, demonstrating that apparently precise burn-severity maps can conceal substantial ecological uncertainty. More broadly, Miller et al. (2023) concluded that uncertainty introduced throughout field sampling, image processing, index selection, and statistical modeling is rarely propagated fully into final burn-severity estimates.
 
-This study uses the analytical framework of Howe et al. (2022) as a starting point while addressing a different set of objectives. It uses a smaller fire set, includes fires outside western North America, applies an updated Google Earth Engine workflow, and treats hierarchical Bayesian analysis as the central methodological contribution. The first objective is to evaluate the relationships of dNBR, RBR, RdNBR, and RdNDVI with field measured CBI across the available fires. The second objective is to compare Landsat 8 and Sentinel-2 where suitable imagery from both sensors exists. The third objective is to determine whether explicitly modeling variation among fires and changes in residual variance across the CBI gradient improves calibration and uncertainty characterization.
+This study uses the analytical framework of Howe et al. (2022) as a starting point while addressing a different set of objectives. It uses a smaller fire set, includes fires outside western North America, applies an updated Google Earth Engine workflow, and treats hierarchical Bayesian analysis as the central methodological contribution. The first objective is to evaluate the relationships of dNBR, RBR, RdNBR, and RdNDVI with field-measured CBI across the available fires. The second objective is to compare Landsat 8 and Sentinel-2 where suitable imagery from both sensors exists. The third objective is to determine whether explicitly modeling variation among fires and changes in residual variance across the CBI gradient improves calibration and uncertainty characterization.
 
 ## Methods
 
@@ -47,7 +48,7 @@ Forest cover was obtained from the 2015 Global Forest Cover Change tree-canopy p
 
 For each fire and sensor, pre-fire and post-fire image collections were constructed using the extended-composite approach described by Howe et al. (2022). The pre-fire composite was the pixel-wise mean of all retained observations from June 1 through September 30 of the year before the fire. The post-fire composite used the same dates in the year after the fire. In Earth Engine, the period was implemented with an inclusive start date of June 1 and an exclusive ending date of October 1.
 
-Mean compositing reduces dependence on an individual image and allows multiple clear observations to contribute to each pixel. However, it can also incorporate vegetation recovery occurring before or during the post-fire compositing season.
+Mean compositing reduces dependence on an individual image and allows multiple clear observations to contribute to each pixel. However, it can also incorporate vegetation recovery occurring before or during the post-fire compositing season. The fixed window also matters for the three dormant-season fires. Chimney Tops and Cobbly Nob burned in late November 2016 and Legion Lake in December 2017, so their pre-fire composites came from the summer of the preceding year rather than the summer immediately before the fire, which lengthens the interval between pre-fire and post-fire imagery.
 
 Howe et al. (2022) also evaluated a hybrid composite that included imagery acquired shortly after the fire and during the early growing season of the following year. That method was not implemented because the national CBI table did not contain the fire containment dates and local snowmelt information needed to apply fire-specific image windows consistently. The hybrid method was also developed primarily to reduce the effects of rapid post-fire green-up in boreal ecosystems.
 
@@ -79,13 +80,13 @@ and
 
 $$\mathrm{RdNDVI} = \frac{\mathrm{dNDVI}}{\sqrt{\max(|\mathrm{NDVI}_{pre}|,\,0.001)}}.$$
 
-The lower bound of 0.001 prevented division by zero or very small pre-fire index values. dNBR represents absolute spectral change, while RBR and RdNBR scale that change relative to pre-fire vegetation conditions. RdNDVI applies an equivalent relativization to changes in vegetation greenness.
+The lower bound of 0.001 prevented division by zero or very small pre-fire index values. dNBR represents absolute spectral change, while RBR and RdNBR scale that change relative to pre-fire vegetation conditions. RdNDVI applies an equivalent relativization to changes in vegetation greenness. No dNBR offset (Parks et al., 2014) was applied. Howe et al. (2022) tested the offset with composite imagery and found that it reduced correspondence with CBI.
 
 Landsat bands used in these calculations have a spatial resolution of 30 m. Sentinel-2 B8 and B4 have native resolutions of 10 m, while B12 has a native resolution of 20 m. Sentinel RdNDVI can therefore be represented at a true 10 m resolution. The Sentinel NBR-derived indices, including dNBR, RBR, and RdNBR, are represented on a 10 m output grid but contain a SWIR2 band resampled from 20 m. They are consequently described as pseudo-10 m products rather than native 10 m products (Howe et al., 2022).
 
 ### Plot extraction and forest masking
 
-Burn-severity indices and canopy cover were sampled at the center coordinates of each CBI plot. Values from both Landsat and Sentinel-2 were extracted at a common sampling scale of 30 m. Using the same sampling scale made the statistical comparison more consistent with the approximately 30 m diameter CBI plots and avoided comparing observations extracted using different pixel supports.
+Burn-severity indices and canopy cover were sampled at the center coordinates of each CBI plot. Values from both Landsat and Sentinel-2 were extracted at a common sampling scale of 30 m. Using the same sampling scale made the statistical comparison more consistent with the approximately 30 m diameter CBI plots and avoided comparing observations extracted using different pixel supports. Each value is a single sample at the plot center rather than an average over the plot area, which differs from Howe et al. (2022), who used area-weighted pixel values within a 15 m radius of each plot center.
 
 The use of a 30 m sampling scale means that the validation analysis does not evaluate Sentinel-2 indices at their finer output resolution. The 10 m Sentinel grid was used only for the mapped spatial comparison.
 
@@ -97,7 +98,7 @@ The relationship between each spectral index and field-measured CBI was evaluate
 
 $$\mathrm{CBI}_i = \beta_0+\beta_1 X_i+\epsilon_i,$$
 
-where $X_i$ was dNBR, RBR, RdNBR, or RdNDVI at plot $i$. Separate regressions were fitted for each sensor. This validation regresses CBI on the index, so its error is expressed on the CBI scale and is comparable across indices. This is the inverse of the calibration and Bayesian models described below, which treat the index as the response; because the coefficient of determination is identical in either direction for a simple linear regression, the ranking of indices is unaffected.
+where $X_i$ was dNBR, RBR, RdNBR, or RdNDVI at plot $i$. Separate regressions were fitted for each sensor. This validation regresses CBI on the index, so its error is expressed on the CBI scale and is comparable across indices. This is the inverse of the calibration and Bayesian models described below, which treat the index as the response; because the coefficient of determination is identical in either direction for a simple linear regression, the ranking of indices is unaffected. Howe et al. (2022) instead calculated R² from their nonlinear calibration models, so the values reported here are not directly comparable with theirs.
 
 Model performance was summarized using the coefficient of determination, $R^2$, and root-mean-square error on the CBI scale. Metrics were calculated both across all available plots and separately for each fire. The pooled analysis gives greater influence to fires containing more CBI plots, while estimates for fires with small sample sizes are comparatively unstable. Per-fire results were therefore used primarily to examine variation among fires rather than to rank indices conclusively.
 
@@ -111,7 +112,7 @@ The fitted curve was evaluated at CBI values of 1.25 and 2.25. These values defi
 
 RBR rasters were classified into low, moderate, and high severity, clipped to the associated MTBS fire perimeter, and exported for mapping. Landsat maps were exported at 30 m. Sentinel maps were exported on a 10 m grid, although Sentinel RBR should be interpreted as pseudo-10 m because its SWIR2 input has a native resolution of 20 m.
 
-Because separate calibration curves were fitted for Landsat and Sentinel-2, mapped differences can reflect differences in calibration, atmospheric processing, cloud masking, and sensor characteristics in addition to spatial resolution. The Landsat and Sentinel maps therefore provide a practical comparison of the complete processing workflows but do not isolate spatial resolution as the sole cause of differences between maps.
+The Landsat thresholds were fitted to plots from all five fires, whereas the Sentinel-2 thresholds were fitted to Legion Lake alone, the only fire with Sentinel-2 data. Because separate calibration curves were fitted for Landsat and Sentinel-2, mapped differences can reflect differences in calibration, atmospheric processing, cloud masking, and sensor characteristics in addition to spatial resolution. The Landsat and Sentinel maps therefore provide a practical comparison of the complete processing workflows but do not isolate spatial resolution as the sole cause of differences between maps.
 
 ### Implementation
 
@@ -247,7 +248,7 @@ def journal_style(styler):
 ```{python}
 #| label: data
 #| code-summary: "Load field data and layers"
-CBI = gpd.read_file(r"cbi_data_review_v4\conus_cbi_v4.shp")
+CBI = gpd.read_file("cbi_data_review_v4/conus_cbi_v4.shp")
 CBI['year'] = pd.to_datetime(CBI['FireDate'], errors='coerce').dt.year
 
 canopy = (ee.ImageCollection('NASA/MEASURES/GFCC/TC/v3')
@@ -361,7 +362,7 @@ sentinel = pd.concat([run_fire(f, 'sentinel') for f in s2_fires], ignore_index=T
 
 ### Pooled and fire specific index performance
 
-Across all Landsat plots, RBR produced the highest pooled R² and the lowest RMSE among the four indices, while RdNBR produced the weakest pooled fit. The differences among the remaining indices were smaller, indicating that the principal contrast in the pooled analysis was between RBR and RdNBR rather than a uniform separation among all four indices.
+Across all Landsat plots (@tbl-pooled), RBR produced the highest pooled R² and the lowest RMSE among the four indices, while RdNBR produced the weakest pooled fit. The differences among the remaining indices were smaller, indicating that the principal contrast in the pooled analysis was between RBR and RdNBR rather than a uniform separation among all four indices.
 
 ```{python}
 #| label: tbl-pooled
@@ -370,7 +371,7 @@ pooled = results(landsat).rename(columns={'index': 'Spectral index', 'R2': 'R²'
 journal_style(pooled.style.hide(axis='index').format({'R²': '{:.3f}', 'RMSE': '{:.3f}'}))
 ```
 
-Index performance varied substantially among fires. No single pooled value described the full set of relationships, and the weak pooled result for RdNBR was concentrated in particular fires rather than observed consistently across the dataset. Cobbly Nob contained only three plots and was therefore excluded from the separate fire regressions because estimates based on so few observations would be unstable. Its plots remained in the pooled analysis and in the hierarchical Bayesian models.
+Index performance varied substantially among fires (@tbl-byfire). No single pooled value described the full set of relationships, and the weak pooled result for RdNBR was concentrated in particular fires rather than observed consistently across the dataset. Cobbly Nob contained only three plots and was therefore excluded from the separate fire regressions because estimates based on so few observations would be unstable. Its plots remained in the pooled analysis and in the hierarchical Bayesian models.
 
 ```{python}
 #| label: tbl-byfire
@@ -383,14 +384,15 @@ piv = (bf.pivot(index='index', columns='fire', values=['R2', 'RMSE'])
          .swaplevel(axis=1)
          .reindex(columns=order)
          .loc[['dNBR', 'RBR', 'RdNBR', 'RdNDVI']]
-         .rename(columns={'R2': 'R²'}, level=1))
+         .rename(columns={'R2': 'R²'}, level=1)
+         .rename(columns={f: f'{f} (n = {n})' for f, n in n_by_fire.items()}, level=0))
 piv.index.name = 'Spectral index'
 journal_style(piv.style.format('{:.3f}'))
 ```
 
 ### Sensor comparison at Legion Lake
 
-Legion Lake was the only fire with suitable prefire and postfire imagery from both sensors. Across the four indices, Landsat 8 and Sentinel-2 produced similar R² and RMSE values when both were sampled at 30 m. Landsat 8 had a small numerical advantage for most comparisons, but the differences were minor relative to the variation observed among fires. Because the validation used a common 30 m sampling scale, this comparison evaluates the complete spectral and preprocessing workflows rather than the finer Sentinel-2 output grid.
+Legion Lake was the only fire with suitable pre-fire and post-fire imagery from both sensors. Across the four indices, Landsat 8 and Sentinel-2 produced similar R² and RMSE values when both were sampled at 30 m (@tbl-compare). Landsat 8 had a small numerical advantage for most comparisons, but the differences were minor relative to the variation observed among fires. Because the validation used a common 30 m sampling scale, this comparison evaluates the complete spectral and preprocessing workflows rather than the finer Sentinel-2 output grid.
 
 ```{python}
 #| label: tbl-compare
@@ -406,7 +408,7 @@ journal_style(tbl.style.format('{:.3f}'))
 
 ### Variation among fires
 
-The RBR and CBI relationships differed in position and shape among fires. The separate fitted curves show that plots with similar CBI values did not always produce the same RBR response across the study fires. The Landsat 8 and Sentinel-2 curves for Legion Lake were closely aligned, which is consistent with the similar validation statistics for that fire. Cobbly Nob was excluded from the figure because its three observations were insufficient to support a separate curve.
+The RBR and CBI relationships differed in position and shape among fires. The separate fitted curves (@fig-byfire) show that plots with similar CBI values did not always produce the same RBR response across the study fires. The Landsat 8 and Sentinel-2 curves for Legion Lake were closely aligned, which is consistent with the similar validation statistics for that fire. Cobbly Nob was excluded from the figure because its three observations were insufficient to support a separate curve.
 
 ```{python}
 #| label: fig-byfire
@@ -417,7 +419,7 @@ s2 = sentinel[sentinel['fire'] == 'Legion Lake'].copy(); s2['group'] = 'Legion L
 combo = pd.concat([ls, s2], ignore_index=True)
 
 def fit_trend(x, y):
-    # exponential NLS (Eq. 8) with a linear fallback for small/failing groups
+    # exponential NLS with a linear fallback for small/failing groups
     xs = np.linspace(x.min(), x.max(), 100)
     if len(x) >= 6:
         try:
@@ -442,16 +444,16 @@ plt.tight_layout(); plt.show()
 
 ### CBI Fire Locations
 
-The five study fires were distributed across Arizona, South Dakota, and Tennessee. The Arizona group included Fuller and Soshone, Legion Lake was located in South Dakota, and Chimney Tops and Cobbly Nob were located in Tennessee. This distribution placed the CBI observations across three geographically distinct regions and several contrasting forest environments.
+The five study fires were distributed across Arizona, South Dakota, and Tennessee (@fig-locations). The Arizona group included Fuller and Soshone, Legion Lake was located in South Dakota, and Chimney Tops and Cobbly Nob were located in Tennessee. This distribution placed the CBI observations across three geographically distinct regions and several contrasting forest environments.
 
-![Figure 1. Locations of the five study fires. Each panel is titled with its county and state and zoomed to that county, which is highlighted in tan; individual fires are labelled by name.](figure1_counties.png)
+![Locations of the five study fires. Each panel is titled with its county and state and zoomed to that county, which is highlighted in tan; individual fires are labelled by name.](figure1_counties.png){#fig-locations}
 
 The location code is below.
 
 ```{python}
 #| label: fig1-code
 #| eval: false
-#| code-summary: "Figure 1: location map"
+#| code-summary: "Location map code"
 study = CBI[CBI['FireName'].isin(fire_list)].to_crs(4326)
 study['lon'] = study.geometry.x
 study['lat'] = study.geometry.y
@@ -501,16 +503,16 @@ plt.savefig('figure1_counties.png', dpi=200, bbox_inches='tight')
 
 ### Mapped severity patterns
 
-The Landsat 8 and Sentinel-2 maps identified the same general high severity portion of Legion Lake, but they differed in the boundaries and internal pattern of the severity classes. The Sentinel-2 output showed finer spatial variation and a more fragmented distribution of moderate and high severity pixels. These differences cannot be attributed to spatial resolution alone because the sensors used different atmospheric products, cloud masking procedures, and fitted classification thresholds. In addition, Sentinel-2 RBR is a pseudo 10 m product because its 20 m SWIR2 band was resampled to the 10 m output grid.
+The Landsat 8 and Sentinel-2 maps (@fig-legion) identified the same general high-severity portion of Legion Lake, but they differed in the boundaries and internal pattern of the severity classes. The Sentinel-2 output showed finer spatial variation and a more fragmented distribution of moderate and high severity pixels. It also classified about 2.4 times as much area within the perimeter as moderate severity, while the area classified as high severity was nearly the same (about 0.94 times the Landsat area). Because the Sentinel-2 thresholds were fitted to Legion Lake alone and the Landsat thresholds to all five fires, much of the difference in moderate-severity area likely reflects the fitted thresholds rather than spatial resolution. These differences cannot be attributed to spatial resolution alone because the sensors used different atmospheric products, cloud masking procedures, and fitted classification thresholds. In addition, Sentinel-2 RBR is a pseudo 10 m product because its 20 m SWIR2 band was resampled to the 10 m output grid.
 
-![Figure 2. Burn-severity classification of the Legion Lake fire from the Relativized Burn Ratio, mapped from Landsat at 30 m (left) and Sentinel at 10 m (right).](legion_compare.png)
+![Burn-severity classification of the Legion Lake fire from the Relativized Burn Ratio, mapped from Landsat at 30 m (left) and Sentinel at 10 m (right).](legion_compare.png){#fig-legion}
 
 The mapping code is below.
 
 ```{python}
 #| label: fig2-code
 #| eval: false
-#| code-summary: "Figure 2: severity comparison"
+#| code-summary: "Severity map code"
 def rbr_thresholds(df, index='RBR'):
     (a, b, c), _ = curve_fit(nls_model, df['Cbi'], df[index], p0=[0, 10, 1], maxfev=10000)
     return {'moderate': nls_model(1.25, a, b, c), 'high': nls_model(2.25, a, b, c)}
@@ -567,7 +569,7 @@ fig.savefig('legion_compare.png', dpi=200, bbox_inches='tight')
 
 The pooled Bayesian model produced an RBR scale R² of approximately 0.69 and a residual standard deviation near 87 RBR units. These values were consistent with the overall nonlinear relationship observed in the frequentist analysis.
 
-Adding a random intercept for each fire improved plot level predictive performance within the represented fires. The hierarchical model exceeded the pooled model by approximately 14.6 expected log predictive density units, which was about 3.4 times the standard error of the difference. The posterior fire intercepts overlapped, but their central estimates differed and Cobbly Nob had the widest interval. Its intercept was also pulled toward the overall mean, showing the effect of partial pooling on the fire with the smallest sample.
+Adding a random intercept for each fire improved plot-level predictive performance within the represented fires. The hierarchical model exceeded the pooled model by approximately 14.6 expected log predictive density units (@tbl-loo). The heteroscedastic model exceeded the pooled model by 17.4 units, but the standard error of that difference was 13.9, so its advantage over complete pooling was modest relative to its uncertainty. The heteroscedastic and hierarchical models differed by only 2.8 units, well within the standard error of that difference (14.6), so the two hierarchical models were not distinguishable by cross-validation. ArviZ also flagged high Pareto k values for the heteroscedastic model, so its LOO estimate should be treated as approximate. The posterior fire intercepts (@fig-intercepts) overlapped, but their central estimates differed and Cobbly Nob had the widest interval. Its intercept was also pulled toward the overall mean, showing the effect of partial pooling on the fire with the smallest sample.
 
 ```{python}
 #| label: tbl-loo
@@ -584,31 +586,31 @@ loo.index.name = 'Model'
 journal_style(loo.style.format('{:.2f}'))
 ```
 
-Posterior predictive checks showed that the constant variance model did not capture the full shape of the observed RBR distribution. In the heteroscedastic model, the coefficient linking CBI to log residual standard deviation was positive, with a posterior mean of 0.27 and a 94% credible interval from 0.16 to 0.38. This corresponds to residual variation increasing by more than a factor of two between CBI values of 0 and 3. The heteroscedastic model produced a more realistic posterior predictive distribution, although its cross validation performance was nearly identical to that of the hierarchical constant variance model. The change therefore improved the representation of predictive spread rather than the estimated mean relationship.
+Posterior predictive checks showed that the constant variance model did not capture the full shape of the observed RBR distribution. In the heteroscedastic model, the coefficient linking CBI to log residual standard deviation was positive, with a posterior mean of 0.27 and a 94% credible interval from 0.16 to 0.38. This corresponds to residual variation increasing by more than a factor of two between CBI values of 0 and 3. The heteroscedastic model produced a more realistic posterior predictive distribution (@fig-ppc), although its cross-validation performance was nearly identical to that of the hierarchical constant variance model. The change therefore improved the representation of predictive spread rather than the estimated mean relationship.
 
-![Figure 3. Posterior per-fire baseline intercepts from the hierarchical model, labelled by fire. Fires sit at somewhat different baselines, though their intervals overlap; the intercept for the smallest fire (Cobbly Nob, three plots) is pulled toward the group mean and carries the widest interval, illustrating partial pooling.](bayes_offsets.png)
+![Posterior per-fire baseline intercepts from the heteroscedastic hierarchical model, labelled by fire. Fires sit at somewhat different baselines, though their intervals overlap; the intercept for the smallest fire (Cobbly Nob, three plots) is pulled toward the group mean and carries the widest interval, illustrating partial pooling.](bayes_offsets.png){#fig-intercepts}
 
-![Figure 4. Posterior predictive check for the final heteroscedastic model. The observed RBR density falls within the range of datasets simulated from the posterior, indicating that the model captures the main features of the observed distribution.](bayes_ppc.png)
+![Posterior predictive check for the final heteroscedastic model. The model captures the general shape of the observed RBR distribution, although it underpredicts the peak near RBR 40 and places predictive mass above the largest observed values.](bayes_ppc.png){#fig-ppc}
 
 ## Discussion
 
-RBR produced the strongest pooled relationship with field measured CBI in this dataset, but the ranking should be interpreted as specific to the fires and processing choices examined here. Howe et al. (2022) found that RdNBR produced the strongest overall relationship under their extended composite approach, with RBR performing nearly as well. The different ranking in this study is therefore not evidence that one analysis confirmed or contradicted the other. It shows that index performance can change with the selected fires, ecosystems, image windows, atmospheric products, and masking procedures. RBR was the most effective index for the present dataset, but these results do not establish it as universally superior.
+RBR produced the strongest pooled relationship with field-measured CBI in this dataset, but the ranking should be interpreted as specific to the fires and processing choices examined here. Howe et al. (2022) found that RdNBR produced the strongest overall relationship under their extended composite approach, with RBR performing nearly as well. The different ranking in this study is therefore not evidence that one analysis confirmed or contradicted the other. It shows that index performance can change with the selected fires, ecosystems, image windows, atmospheric products, masking procedures, plot sampling methods, and the regression form used for validation. RBR was the most effective index for the present dataset, but these results do not establish it as universally superior.
 
-The poor pooled performance of RdNBR also did not represent a consistent failure across every fire. Its performance varied markedly among fires, and the weakest relationships occurred where small prefire NBR values made the square root denominator unstable. This behavior illustrates an important practical difference between the relativized indices. RBR uses an additive adjustment in its denominator, whereas RdNBR can become extremely large when prefire NBR approaches zero. The pooled ranking was therefore influenced by a subset of unstable observations rather than by a uniform lack of association with CBI.
+The poor pooled performance of RdNBR also did not represent a consistent failure across every fire. Its performance varied markedly among fires. One likely contributor is the square root denominator, which becomes unstable when pre-fire NBR is small, although pre-fire NBR values were not examined directly in this analysis. This behavior illustrates an important practical difference between the relativized indices. RBR uses an additive adjustment in its denominator, whereas RdNBR can become extremely large when pre-fire NBR approaches zero. The weak pooled result may therefore reflect a subset of unstable observations rather than a uniform lack of association with CBI.
 
-Variation among fires was one of the clearest findings of the analysis. The separate curves occupied different positions in RBR and CBI space, and the hierarchical model predicted held out plots within the represented fires better than a model that imposed one common intercept. Partial pooling was especially useful for Cobbly Nob, which had too few observations to support a reliable separate regression. Rather than discarding that fire or estimating its relationship independently, the hierarchical model combined its limited information with the broader pattern across all fires. At the same time, the model included only five fires, so the estimated variation among fires remains uncertain. The plot level cross validation used here also does not test prediction for a completely new fire. Evaluating transfer to unobserved fires would require cross validation that leaves out one entire fire at a time and would benefit from a much larger fire sample.
+Variation among fires was one of the clearest findings of the analysis. The separate curves occupied different positions in RBR and CBI space, and the hierarchical model predicted held-out plots within the represented fires better than a model that imposed one common intercept. Partial pooling was especially useful for Cobbly Nob, which had too few observations to support a reliable separate regression. Rather than discarding that fire or estimating its relationship independently, the hierarchical model combined its limited information with the broader pattern across all fires. At the same time, the model included only five fires, so the estimated variation among fires remains uncertain. The plot-level cross-validation used here also does not test prediction for a completely new fire. Evaluating transfer to unobserved fires would require cross-validation that leaves out one entire fire at a time and would benefit from a much larger fire sample.
 
 The heteroscedastic model added a different form of information. Allowing residual variation to increase with CBI improved the posterior predictive representation of the observed RBR distribution even though it did not improve mean predictive performance. This distinction matters because R² and RMSE summarize the center of the relationship but do not show how uncertainty changes across the severity gradient. The fitted model indicates that RBR becomes more variable as field severity increases, so predictions based on the mean curve should not be assigned equal uncertainty at low and high CBI values. The assumed exponential change in residual standard deviation is still a simplified representation of the data, and other likelihoods or variance functions may perform differently with a larger sample.
 
 The Bayesian models in this study were fitted in the forward direction, with RBR treated as the response conditional on CBI. They therefore characterize the distribution of satellite RBR measurements expected at a known field severity. The current code does not calculate a posterior distribution of CBI for an observed RBR value. That reverse inference could be obtained through a probabilistic inversion of the fitted likelihood combined with a prior distribution for CBI, or by fitting a model with CBI as the response. Either approach would introduce additional assumptions and should be described separately from the calibration results reported here.
 
-The direct Landsat 8 and Sentinel-2 comparison was limited to Legion Lake because the other fires lacked a complete Sentinel-2 prefire record. The similar validation metrics at that fire suggest that both workflows captured a comparable plot level relationship, but one fire is insufficient for a general conclusion about sensor performance. The comparison also combined Landsat surface reflectance with Sentinel-2 top of atmosphere reflectance. Consequently, differences may reflect atmospheric correction and preprocessing as well as sensor properties. The mapped comparison has similar constraints. Sentinel-2 showed finer spatial patterns, but the maps also used separate sensor calibrations and different preprocessing steps, and the RBR output includes a SWIR2 band resampled from 20 m. The maps should therefore be interpreted as a comparison of two complete workflows rather than a controlled test of spatial resolution.
+The direct Landsat 8 and Sentinel-2 comparison was limited to Legion Lake because the other fires lacked a complete Sentinel-2 pre-fire record. The similar validation metrics at that fire suggest that both workflows captured a comparable plot-level relationship, but one fire is insufficient for a general conclusion about sensor performance. The comparison also combined Landsat surface reflectance with Sentinel-2 top-of-atmosphere reflectance. Consequently, differences may reflect atmospheric correction and preprocessing as well as sensor properties. The mapped comparison has similar constraints. Sentinel-2 showed finer spatial patterns, but the maps also used separate sensor calibrations and different preprocessing steps, and the RBR output includes a SWIR2 band resampled from 20 m. The maps should therefore be interpreted as a comparison of two complete workflows rather than a controlled test of spatial resolution.
 
 The study also used a relatively small fire set, and two fires were drawn from the same national CBI source used by Howe et al. (2022). These features do not diminish the value of the analysis, but they limit the extent to which its numerical rankings can be generalized. The main contribution is not a second estimate of the same coefficients reported by Howe et al. Instead, it is the demonstration that a hierarchical Bayesian structure can represent variation among fires, retain information from very small fire samples, and model changes in predictive uncertainty that are hidden by a single pooled regression.
 
 ## Conclusion
 
-This study evaluated four Landsat 8 and Sentinel-2 burn severity indices against field measured CBI and used hierarchical Bayesian models to examine variation among fires and across the severity gradient. RBR produced the strongest pooled relationship in this dataset, while the performance of all indices varied among fires. Landsat 8 and Sentinel-2 produced similar validation results at Legion Lake, although the limited imagery record allowed only one direct sensor comparison. Modeling separate fire intercepts improved prediction for held out plots within the represented fires, and allowing residual variation to increase with CBI produced a more realistic description of uncertainty. Together, these findings support the use of hierarchical calibration when burn severity data span multiple fires and show why predictive uncertainty should be evaluated directly rather than inferred from a single R² or RMSE value.
+This study evaluated four Landsat 8 and Sentinel-2 burn severity indices against field-measured CBI and used hierarchical Bayesian models to examine variation among fires and across the severity gradient. RBR produced the strongest pooled relationship in this dataset, while the performance of all indices varied among fires. Landsat 8 and Sentinel-2 produced similar validation results at Legion Lake, although the limited imagery record allowed only one direct sensor comparison. Modeling separate fire intercepts improved prediction for held-out plots within the represented fires, and allowing residual variation to increase with CBI produced a more realistic description of uncertainty. Together, these findings support the use of hierarchical calibration when burn severity data span multiple fires and show why predictive uncertainty should be evaluated directly rather than inferred from a single R² or RMSE value.
 
 ## References
 
